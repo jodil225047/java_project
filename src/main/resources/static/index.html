@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MediFind - Local Medicine Availability Network</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='white'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#find" aria-label="MediFind home">
+        <span class="brand-mark" aria-hidden="true">+</span>
+        <span>
+          <strong>MediFind</strong>
+          <small>Local medicine availability network</small>
+        </span>
+      </a>
+      <nav class="tabs" aria-label="Main">
+        <a href="#find" data-tab="find">Find medicine</a>
+        <a href="#alerts" data-tab="alerts">My alerts</a>
+        <a href="#outlet" data-tab="outlet">Outlet portal</a>
+        <a href="#impact" data-tab="impact">Impact</a>
+        <button id="theme-toggle" class="btn theme-toggle" type="button" aria-pressed="false">Dark theme</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ============================ FIND ============================ -->
+    <section id="tab-find" class="tab" hidden>
+      <div class="hero">
+        <h1>Don't search pharmacy by pharmacy.</h1>
+        <p>Search once. See which nearby hospital and retail pharmacies last reported the medicine, and <em>how recently</em>.</p>
+      </div>
+
+      <form id="search-form" class="card search-card" autocomplete="off">
+        <div class="field grow">
+          <label for="q">Medicine name (add the strength if you know it)</label>
+          <input id="q" name="q" type="search" list="med-suggestions" placeholder="e.g. paracetamol 500" maxlength="80" required minlength="2">
+          <datalist id="med-suggestions"></datalist>
+        </div>
+        <div class="field">
+          <label for="form-filter">Form</label>
+          <select id="form-filter"><option value="">Any form</option></select>
+        </div>
+        <div class="field">
+          <label for="radius">Within</label>
+          <select id="radius">
+            <option value="5">5 km</option>
+            <option value="10">10 km</option>
+            <option value="15" selected>15 km</option>
+            <option value="30">30 km</option>
+            <option value="50">50 km</option>
+          </select>
+        </div>
+        <button class="btn primary" type="submit">Search</button>
+      </form>
+
+      <div class="locbar">
+        <span id="loc-status">Using the demo location.</span>
+        <button id="loc-btn" class="link" type="button">Use my location</button>
+        <button id="loc-demo" class="link" type="button" hidden>Use demo location</button>
+      </div>
+
+      <div id="results" aria-live="polite"></div>
+
+      <p class="disclaimer">
+        MediFind only shows what outlets have <strong>reported</strong>. It does not prescribe or recommend
+        medication, and a report can be out of date: call the outlet before you travel.
+      </p>
+    </section>
+
+    <!-- ============================ ALERTS ============================ -->
+    <section id="tab-alerts" class="tab" hidden>
+      <div class="hero small">
+        <h1>My alerts</h1>
+        <p>Can't find a medicine right now? Ask for an alert from the search results, and it will show up here once an outlet reports it in stock.</p>
+      </div>
+      <div id="alerts-list" aria-live="polite"></div>
+      <p class="disclaimer">Alerts are stored in this browser using a private key. Your contact details are never shown back to anyone.</p>
+    </section>
+
+    <!-- ============================ OUTLET ============================ -->
+    <section id="tab-outlet" class="tab" hidden>
+      <div id="outlet-login">
+        <div class="hero small">
+          <h1>Outlet portal</h1>
+          <p>For authorised hospital and retail pharmacies to keep their stock status up to date.</p>
+        </div>
+        <form id="login-form" class="card login-card">
+          <div class="field">
+            <label for="code">Outlet code</label>
+            <input id="code" name="code" type="text" maxlength="20" required autocomplete="username" placeholder="e.g. CGH01">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" maxlength="100" required autocomplete="current-password">
+          </div>
+          <button class="btn primary" type="submit">Log in</button>
+          <p id="login-error" class="error" role="alert" hidden></p>
+          <p class="hint">Demo outlets: CGH01, TCH02, RMC03, GLP04, CCP05, SRP06, MPP07, PGP08, HVP09, NLP10. Password: <code>demo123</code></p>
+        </form>
+      </div>
+
+      <div id="outlet-dash" hidden>
+        <div class="dash-head card">
+          <div>
+            <h1 id="dash-name"></h1>
+            <p id="dash-meta" class="muted"></p>
+          </div>
+          <div class="dash-actions">
+            <span id="dash-state" class="pill"></span>
+            <button id="pause-btn" class="btn" type="button"></button>
+            <button id="logout-btn" class="btn ghost" type="button">Log out</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Stock reports</h2>
+          <div class="table-scroll">
+            <table class="grid">
+              <thead>
+                <tr>
+                  <th>Medicine</th><th>Status</th><th>Last update</th>
+                  <th>Public visibility</th><th>Demand</th>
+                </tr>
+              </thead>
+              <tbody id="stock-body"></tbody>
+            </table>
+          </div>
+          <form id="add-form" class="add-row">
+            <div class="field grow">
+              <label for="add-med">Report another medicine</label>
+              <select id="add-med"></select>
+            </div>
+            <div class="field">
+              <label for="add-status">Status</label>
+              <select id="add-status">
+                <option value="AVAILABLE">Available</option>
+                <option value="LOW">Low stock</option>
+                <option value="OUT">Out of stock</option>
+              </select>
+            </div>
+            <button class="btn primary" type="submit">Add report</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Audit log</h2>
+          <ul id="audit-list" class="audit"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ IMPACT ============================ -->
+    <section id="tab-impact" class="tab" hidden>
+      <div class="hero small">
+        <h1>Impact &amp; how ranking works</h1>
+        <p>Aligned with SDG 3 (Good Health &amp; Well-being), target 3.8: access to essential medicines for all.</p>
+      </div>
+      <div id="metrics" class="metrics"></div>
+
+      <div class="card">
+        <h2>How results are ranked</h2>
+        <p>Every report gets four scores between 0 and 100, combined with fixed weights. Reports that show stock always come before "out of stock" ones; the score orders each group.</p>
+        <div id="weights" class="weights"></div>
+        <ul class="explain">
+          <li><strong>Availability</strong>: available = 100, low stock = 50, out of stock = 0.</li>
+          <li><strong>Freshness</strong>: halves every 3 hours since the outlet last updated. A report from 3 days ago scores almost 0.</li>
+          <li><strong>Verification</strong>: audited outlets score 100, others 50.</li>
+          <li><strong>Distance</strong>: 100 at your location, falling to 0 at the edge of the search radius.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# MediBridge - Local Medicine Availability Network
+# MediFind - Local Medicine Availability Network
 
 College project (SDG 3 - Good Health & Well-being, target 3.8).
 Patients search **once** and see which nearby hospital and retail pharmacies last reported a medicine
